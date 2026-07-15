@@ -1,0 +1,14 @@
+package: govapi
+output: api.gen.go
+generate:
+  models: true
+  client: true
+output-options:
+  name-normalizer: ToCamelCaseWithInitialisms
+  initialism-overrides: true
+  response-type-suffix: HTTPResponse
+  additional-initialisms:
+    - MMR
+    - PUUID
+    - RR
+    - VLR

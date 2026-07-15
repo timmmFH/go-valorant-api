@@ -1,77 +1,85 @@
+# go-valorant-api
 
+Typed Go client for HenrikDev's unofficial VALORANT API 4.9.0, including the
+premium webhook endpoints.
 
-<img align="right" src="https://i.ibb.co/7px2VF7/valogoapi.png" height="200" width="200">
+The client is generated from the checked-in OpenAPI snapshot, so request
+parameters, response models, and supported endpoints stay aligned with the API
+contract.
 
-
-
-
-# GO-VALORANT-API [![Go Reference](https://pkg.go.dev/badge/github.com/yldshv/go-valorant-api.svg)](https://pkg.go.dev/github.com/yldshv/go-valorant-api)
-
-GO-VALORANT-API is a go-based wrapper for the following Valorant Rest API:
-
-https://github.com/Henrik-3/unofficial-valorant-api v3.0.0
-
-This API is free and freely accessible for everyone. An API key is optional but not mandatory.
-
-This is the first version. There could be some bugs, unexpected exceptions or similar.
-
-### API key
-
-You can request an API key on [Henrik's discord server](https://discord.com/invite/X3GaVkX2YN) <br> It is NOT required to use an API key though!
-
-## Installation
+## Install
 
 ```bash
-go get -u github.com/yldshv/go-valorant-api
+go get github.com/yldshv/go-valorant-api
 ```
 
-### Example
+## Use
 
-Get Account Information
 ```go
 package main
 
 import (
-  govapi "github.com/yldshv/go-valorant-api"
+	"context"
+	"log"
+
+	govapi "github.com/yldshv/go-valorant-api"
 )
 
 func main() {
-  vapi := govapi.New() 
-  // vapi := govapi.New(govapi.WithKey("xxx")) <- If you have a key.
+	client, err := govapi.New("your-api-key")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-  acc, err := vapi.GetAccountByName(govapi.GetAccountByNameParams{
-    Name: "xxx",
-    Tag: "xxx",
-  })
-  if err != nil {
-    // handle the error
-  }
+	response, err := client.GetAccountV2WithResponse(
+		context.Background(),
+		"Henrik",
+		"dev",
+		nil,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if response.JSON200 == nil {
+		log.Fatalf("HenrikDev returned %s: %s", response.Status(), response.Body)
+	}
 
-  // Do whatever you want with acc
-  fmt.Printf("%+v", acc.Data.Puuid)
-
-  // Ratelimits
-  fmt.Printf("%+v", vapi.Ratelimits)
+	log.Printf("PUUID: %s", response.JSON200.Data.PUUID)
 }
 ```
+
+Every operation has a `WithResponse` method that returns the decoded response,
+the raw body, and the underlying `http.Response`. Use `WithHTTPClient` or
+`WithBaseURL` when constructing the client to customize transport behavior or
+target a test server.
+
+## Premium webhooks
+
+Premium operations use the same client and API key:
 
 ```go
-mmrHistory, err := vapi.GetLifetimeMMRHistoryByPUUID(govapi.GetLifetimeMMRHistoryByPUUIDParams{
-  Affinity: "eu",
-  Puuid: acc.Data.Puuid, //here you can see we used the value from above
-  Page: "2",
-  Size: "10",
-})
-if err != nil {
-  // handle the error
-}
+events := []govapi.PremiumWebhookEvent{govapi.PremiumWebhookEventMatch}
 
-fmt.Printf("%+v", mmrHistory)
+response, err := client.AddWebhookUserWithResponse(
+	context.Background(),
+	govapi.PremiumWebhookUserAddRequest{
+		PUUID:  govapi.Ptr("player-puuid"),
+		Events: &events,
+	},
+)
 ```
 
-## Documentation
+The current HenrikDev OpenAPI contract does not define a JSON schema for the
+successful webhook settings and update responses. Those bodies remain available
+through `response.Body` until HenrikDev publishes the missing schemas.
 
-https://pkg.go.dev/github.com/yldshv/go-valorant-api#VAPI
+## Regenerate
 
-Methodnaming is heavily inspired by the endpoint naming:<br>
-[Swagger](https://app.swaggerhub.com/apis-docs/Henrik-3/HenrikDev-API/3.0.0)
+```bash
+go generate ./...
+```
+
+The snapshot is normalized to OpenAPI 3.0 because the generator does not yet
+support HenrikDev's nullable OpenAPI 3.1 forms.
+
+This project is unofficial and is not endorsed by Riot Games.
