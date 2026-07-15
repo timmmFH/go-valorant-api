@@ -10,7 +10,7 @@ contract.
 ## Install
 
 ```bash
-go get github.com/yldshv/go-valorant-api
+go get github.com/timmmFH/go-valorant-api/v2
 ```
 
 ## Use
@@ -22,7 +22,7 @@ import (
 	"context"
 	"log"
 
-	govapi "github.com/yldshv/go-valorant-api"
+	govapi "github.com/timmmFH/go-valorant-api/v2"
 )
 
 func main() {

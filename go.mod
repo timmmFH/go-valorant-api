@@ -1,4 +1,4 @@
-module github.com/yldshv/go-valorant-api
+module github.com/timmmFH/go-valorant-api/v2
 
 go 1.21.1
 
